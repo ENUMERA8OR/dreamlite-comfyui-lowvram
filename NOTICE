@@ -1,0 +1,10 @@
+DreamLite Low-VRAM ComfyUI Nodes
+
+This project provides ComfyUI wrappers and low-VRAM inference utilities for
+local DreamLite installations.
+
+The bundled `infer_base_offload.py` script is derived from DreamLite inference
+code and retains the upstream Apache-2.0 license header from ByteDance Ltd.
+
+DreamLite, ComfyUI, model checkpoints, and upscaler checkpoints are separate
+projects with their own licenses and must be obtained separately by users.

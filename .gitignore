@@ -1,0 +1,48 @@
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.log
+.DS_Store
+bright_side_options_note.md
+
+# Local agent/editor state
+.agents/
+.codex/
+.conda-envs/
+.vscode/
+.idea/
+
+# Python environments and dependency caches
+.venv/
+venv/
+env/
+site-packages/
+
+# Model weights and generated media
+models/
+output/
+outputs/
+input/
+temp/
+*.ckpt
+*.safetensors
+*.pth
+*.pt
+*.onnx
+*.gguf
+*.png
+*.jpg
+*.jpeg
+*.webp
+
+# Keep documentation images explicitly if added later.
+!docs/**/*.png
+!docs/**/*.jpg
+!docs/**/*.jpeg
+!docs/**/*.webp
+!Generated_Images/
+!Generated_Images/**/*.png
+!Generated_Images/**/*.jpg
+!Generated_Images/**/*.jpeg
+!Generated_Images/**/*.webp

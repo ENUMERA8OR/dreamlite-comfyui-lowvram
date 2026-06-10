@@ -1,0 +1,875 @@
+{
+  "id": "dreamlite-base-mobile-upscale-compare-v3-clean-node-types",
+  "revision": 5,
+  "last_node_id": 14,
+  "last_link_id": 11,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "DreamLiteBaseGenerateV2",
+      "pos": [
+        100,
+        120
+      ],
+      "size": [
+        540,
+        500
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "link": null
+        },
+        {
+          "name": "negative_prompt",
+          "type": "STRING",
+          "link": null
+        },
+        {
+          "name": "steps",
+          "type": "INT",
+          "link": null
+        },
+        {
+          "name": "width",
+          "type": "INT",
+          "link": null
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "link": null
+        },
+        {
+          "name": "seed",
+          "type": "INT",
+          "link": null
+        },
+        {
+          "name": "memory_mode",
+          "type": "COMBO",
+          "link": null
+        },
+        {
+          "name": "device",
+          "type": "COMBO",
+          "link": null
+        },
+        {
+          "name": "dtype",
+          "type": "COMBO",
+          "link": null
+        },
+        {
+          "name": "attention_mode",
+          "type": "COMBO",
+          "link": null
+        },
+        {
+          "name": "attention_slice_size",
+          "type": "INT",
+          "link": null
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            1,
+            2
+          ]
+        },
+        {
+          "name": "log",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "DreamLiteBaseGenerateV2",
+        "color_role": "DreamLite-base generator",
+        "workflow_compat_note": "Clean v3 node type; avoids stale browser widget state."
+      },
+      "widgets_values": [
+        "",
+        "",
+        26,
+        1024,
+        1024,
+        2147483647,
+        "sequential_cpu_offload",
+        "cuda",
+        "float32",
+        "gqa_query_slicing",
+        256
+      ],
+      "color": "#12355b",
+      "bgcolor": "#2f80ed"
+    },
+    {
+      "id": 2,
+      "type": "SaveImage",
+      "pos": [
+        720,
+        120
+      ],
+      "size": [
+        300,
+        90
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 1
+        },
+        {
+          "name": "filename_prefix",
+          "type": "STRING",
+          "link": null
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "color_role": "base raw image save"
+      },
+      "widgets_values": [
+        "dreamlite_base_raw"
+      ],
+      "color": "#1b4332",
+      "bgcolor": "#52b788"
+    },
+    {
+      "id": 3,
+      "type": "UpscaleModelLoader",
+      "pos": [
+        720,
+        270
+      ],
+      "size": [
+        330,
+        90
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model_name",
+          "type": "COMBO",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "UPSCALE_MODEL",
+          "type": "UPSCALE_MODEL",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "UpscaleModelLoader",
+        "color_role": "base RealESRGAN model loader"
+      },
+      "widgets_values": [
+        "RealESRGAN_x4plus.pth"
+      ],
+      "color": "#5c3d00",
+      "bgcolor": "#f2b705"
+    },
+    {
+      "id": 4,
+      "type": "DreamLiteTiledUpscaleWithModel",
+      "pos": [
+        1120,
+        250
+      ],
+      "size": [
+        330,
+        130
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "upscale_model",
+          "type": "UPSCALE_MODEL",
+          "link": 3
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 2
+        },
+        {
+          "name": "tile_size",
+          "type": "INT",
+          "link": null
+        },
+        {
+          "name": "overlap",
+          "type": "INT",
+          "link": null
+        },
+        {
+          "name": "output_device",
+          "type": "COMBO",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "DreamLiteTiledUpscaleWithModel",
+        "color_role": "base tiled RealESRGAN upscale"
+      },
+      "widgets_values": [
+        256,
+        32,
+        "cpu"
+      ],
+      "color": "#4b1d73",
+      "bgcolor": "#b15cff"
+    },
+    {
+      "id": 5,
+      "type": "SaveImage",
+      "pos": [
+        1510,
+        270
+      ],
+      "size": [
+        350,
+        90
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 4
+        },
+        {
+          "name": "filename_prefix",
+          "type": "STRING",
+          "link": null
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "color_role": "base upscaled image save"
+      },
+      "widgets_values": [
+        "dreamlite_base_esrgan_upscale"
+      ],
+      "color": "#6f1d1b",
+      "bgcolor": "#f77f00"
+    },
+    {
+      "id": 6,
+      "type": "DreamLiteMobileGenerateV2",
+      "pos": [
+        100,
+        760
+      ],
+      "size": [
+        540,
+        380
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "link": null
+        },
+        {
+          "name": "steps",
+          "type": "INT",
+          "link": null
+        },
+        {
+          "name": "width",
+          "type": "INT",
+          "link": null
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "link": null
+        },
+        {
+          "name": "seed",
+          "type": "INT",
+          "link": null
+        },
+        {
+          "name": "dtype",
+          "type": "COMBO",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            5,
+            6
+          ]
+        },
+        {
+          "name": "log",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "DreamLiteMobileGenerateV2",
+        "color_role": "DreamLite-mobile generator",
+        "workflow_compat_note": "Clean v3 node type; mobile uses sequential offload internally by default."
+      },
+      "widgets_values": [
+        "",
+        4,
+        1024,
+        1024,
+        2147483647,
+        "bfloat16"
+      ],
+      "color": "#003049",
+      "bgcolor": "#00b4d8"
+    },
+    {
+      "id": 7,
+      "type": "SaveImage",
+      "pos": [
+        720,
+        760
+      ],
+      "size": [
+        320,
+        90
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 5
+        },
+        {
+          "name": "filename_prefix",
+          "type": "STRING",
+          "link": null
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "color_role": "mobile raw image save"
+      },
+      "widgets_values": [
+        "dreamlite_mobile_raw"
+      ],
+      "color": "#31572c",
+      "bgcolor": "#90be6d"
+    },
+    {
+      "id": 8,
+      "type": "UpscaleModelLoader",
+      "pos": [
+        720,
+        910
+      ],
+      "size": [
+        330,
+        90
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model_name",
+          "type": "COMBO",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "UPSCALE_MODEL",
+          "type": "UPSCALE_MODEL",
+          "links": [
+            7
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "UpscaleModelLoader",
+        "color_role": "mobile RealESRGAN model loader"
+      },
+      "widgets_values": [
+        "RealESRGAN_x4plus.pth"
+      ],
+      "color": "#6c4a00",
+      "bgcolor": "#ffd166"
+    },
+    {
+      "id": 9,
+      "type": "DreamLiteTiledUpscaleWithModel",
+      "pos": [
+        1120,
+        890
+      ],
+      "size": [
+        330,
+        130
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "upscale_model",
+          "type": "UPSCALE_MODEL",
+          "link": 7
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 6
+        },
+        {
+          "name": "tile_size",
+          "type": "INT",
+          "link": null
+        },
+        {
+          "name": "overlap",
+          "type": "INT",
+          "link": null
+        },
+        {
+          "name": "output_device",
+          "type": "COMBO",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            8
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "DreamLiteTiledUpscaleWithModel",
+        "color_role": "mobile tiled RealESRGAN upscale"
+      },
+      "widgets_values": [
+        256,
+        32,
+        "cpu"
+      ],
+      "color": "#3c096c",
+      "bgcolor": "#c77dff"
+    },
+    {
+      "id": 10,
+      "type": "SaveImage",
+      "pos": [
+        1510,
+        910
+      ],
+      "size": [
+        360,
+        90
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 8
+        },
+        {
+          "name": "filename_prefix",
+          "type": "STRING",
+          "link": null
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "color_role": "mobile upscaled image save"
+      },
+      "widgets_values": [
+        "dreamlite_mobile_esrgan_upscale"
+      ],
+      "color": "#7f2d00",
+      "bgcolor": "#f9844a"
+    },
+    {
+      "id": 11,
+      "type": "LoadImage",
+      "pos": [
+        100,
+        1360
+      ],
+      "size": [
+        360,
+        320
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "COMBO",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            10
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage",
+        "color_role": "upload source image for ESRGAN"
+      },
+      "widgets_values": [
+        "example.png"
+      ],
+      "color": "#263238",
+      "bgcolor": "#80cbc4"
+    },
+    {
+      "id": 12,
+      "type": "UpscaleModelLoader",
+      "pos": [
+        550,
+        1390
+      ],
+      "size": [
+        330,
+        90
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model_name",
+          "type": "COMBO",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "UPSCALE_MODEL",
+          "type": "UPSCALE_MODEL",
+          "links": [
+            9
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "UpscaleModelLoader",
+        "color_role": "upload RealESRGAN model loader"
+      },
+      "widgets_values": [
+        "RealESRGAN_x4plus.pth"
+      ],
+      "color": "#5c3d00",
+      "bgcolor": "#f2b705"
+    },
+    {
+      "id": 13,
+      "type": "DreamLiteTiledUpscaleWithModel",
+      "pos": [
+        950,
+        1370
+      ],
+      "size": [
+        340,
+        140
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "upscale_model",
+          "type": "UPSCALE_MODEL",
+          "link": 9
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 10
+        },
+        {
+          "name": "tile_size",
+          "type": "INT",
+          "link": null
+        },
+        {
+          "name": "overlap",
+          "type": "INT",
+          "link": null
+        },
+        {
+          "name": "output_device",
+          "type": "COMBO",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            11
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "DreamLiteTiledUpscaleWithModel",
+        "color_role": "upload tiled RealESRGAN upscale"
+      },
+      "widgets_values": [
+        256,
+        32,
+        "cpu"
+      ],
+      "color": "#4b1d73",
+      "bgcolor": "#b15cff"
+    },
+    {
+      "id": 14,
+      "type": "SaveImage",
+      "pos": [
+        1360,
+        1390
+      ],
+      "size": [
+        360,
+        90
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 11
+        },
+        {
+          "name": "filename_prefix",
+          "type": "STRING",
+          "link": null
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "color_role": "uploaded image ESRGAN save"
+      },
+      "widgets_values": [
+        "uploaded_image_esrgan_upscale"
+      ],
+      "color": "#7f2d00",
+      "bgcolor": "#f9844a"
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "IMAGE"
+    ],
+    [
+      2,
+      1,
+      0,
+      4,
+      1,
+      "IMAGE"
+    ],
+    [
+      3,
+      3,
+      0,
+      4,
+      0,
+      "UPSCALE_MODEL"
+    ],
+    [
+      4,
+      4,
+      0,
+      5,
+      0,
+      "IMAGE"
+    ],
+    [
+      5,
+      6,
+      0,
+      7,
+      0,
+      "IMAGE"
+    ],
+    [
+      6,
+      6,
+      0,
+      9,
+      1,
+      "IMAGE"
+    ],
+    [
+      7,
+      8,
+      0,
+      9,
+      0,
+      "UPSCALE_MODEL"
+    ],
+    [
+      8,
+      9,
+      0,
+      10,
+      0,
+      "IMAGE"
+    ],
+    [
+      9,
+      12,
+      0,
+      13,
+      0,
+      "UPSCALE_MODEL"
+    ],
+    [
+      10,
+      11,
+      0,
+      13,
+      1,
+      "IMAGE"
+    ],
+    [
+      11,
+      13,
+      0,
+      14,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "1. DreamLite Base - Generate, Save Raw, Tiled ESRGAN Upscale",
+      "bounding": [
+        60,
+        60,
+        1840,
+        580
+      ],
+      "color": "#2f80ed",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "2. DreamLite Mobile - Generate, Save Raw, Tiled ESRGAN Upscale",
+      "bounding": [
+        60,
+        700,
+        1840,
+        560
+      ],
+      "color": "#00b4d8",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "3. Upload Any Existing Image - Tiled ESRGAN Upscale Only",
+      "bounding": [
+        60,
+        1300,
+        1700,
+        430
+      ],
+      "color": "#80cbc4",
+      "font_size": 24,
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.72,
+      "offset": [
+        80,
+        40
+      ]
+    },
+    "workflow_notes": [
+      "Base and Mobile branches save the raw generated image and also route the same generated image directly into DreamLite Tiled Upscale.",
+      "The Upload lane is independent: use Load Image to upload any existing image, then run tiled RealESRGAN upscaling without generating a DreamLite image.",
+      "Upscale branches use tile_size=256, overlap=32, output_device=cpu for 4GB VRAM stability."
+    ]
+  },
+  "version": 0.4
+}

@@ -1,0 +1,346 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+2 0 obj
+<< /Length 2165 >>
+stream
+BT
+/F1 10 Tf
+12 TL
+1 0 0 1 50 760 Tm (DreamLite Pipeline Math: From Prompt To Image) Tj
+1 0 0 1 50 746 Tm () Tj
+1 0 0 1 50 732 Tm (Think of the image pipeline as a chain of transformations. Each stage produces the ) Tj
+1 0 0 1 50 718 Tm (numerical object that the next stage needs.) Tj
+1 0 0 1 50 704 Tm () Tj
+1 0 0 1 50 690 Tm (1. Text Becomes Numbers) Tj
+1 0 0 1 50 676 Tm () Tj
+1 0 0 1 50 662 Tm (Your prompt first becomes token embeddings:) Tj
+1 0 0 1 50 648 Tm () Tj
+1 0 0 1 50 634 Tm (prompt -> text_encoder -> text embeddings) Tj
+1 0 0 1 50 620 Tm () Tj
+1 0 0 1 50 606 Tm (Inside the text encoder, many layers do:) Tj
+1 0 0 1 50 592 Tm () Tj
+1 0 0 1 50 578 Tm (y = W x + b) Tj
+1 0 0 1 50 564 Tm () Tj
+1 0 0 1 50 550 Tm (Meaning:) Tj
+1 0 0 1 50 536 Tm () Tj
+1 0 0 1 50 522 Tm (- x = input vector) Tj
+1 0 0 1 50 508 Tm (- W = learned weight matrix) Tj
+1 0 0 1 50 494 Tm (- b = learned bias) Tj
+1 0 0 1 50 480 Tm (- y = transformed vector) Tj
+1 0 0 1 50 466 Tm () Tj
+1 0 0 1 50 452 Tm (This turns words like:) Tj
+1 0 0 1 50 438 Tm () Tj
+1 0 0 1 50 424 Tm ("transparent turquoise glass warrior") Tj
+1 0 0 1 50 410 Tm () Tj
+1 0 0 1 50 396 Tm (into dense numerical meaning vectors.) Tj
+1 0 0 1 50 382 Tm () Tj
+1 0 0 1 50 368 Tm (weight_dtype affects how accurately W, x, b, and y are represented.) Tj
+1 0 0 1 50 354 Tm () Tj
+1 0 0 1 50 340 Tm (2. Attention Decides What Matters) Tj
+1 0 0 1 50 326 Tm () Tj
+1 0 0 1 50 312 Tm (Attention is how the model lets different parts of the prompt and image latent influence) Tj
+1 0 0 1 50 298 Tm ( each other.) Tj
+1 0 0 1 50 284 Tm () Tj
+1 0 0 1 50 270 Tm (attention = softmax\(Q K^T / sqrt\(d\)\) V) Tj
+1 0 0 1 50 256 Tm () Tj
+1 0 0 1 50 242 Tm (Rough intuition:) Tj
+1 0 0 1 50 228 Tm () Tj
+1 0 0 1 50 214 Tm (- Q = queries, "what am I looking for?") Tj
+1 0 0 1 50 200 Tm (- K = keys, "what information exists?") Tj
+1 0 0 1 50 186 Tm (- V = values, "what content should I pass forward?") Tj
+1 0 0 1 50 172 Tm (- Q K^T = similarity scores) Tj
+1 0 0 1 50 158 Tm (- softmax\(...\) = converts scores into importance weights) Tj
+1 0 0 1 50 144 Tm (- result = weighted mixture of useful information) Tj
+1 0 0 1 50 130 Tm () Tj
+ET
+endstream
+endobj
+3 0 obj
+<< /Type /Page /Parent 14 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 2 0 R >>
+endobj
+4 0 obj
+<< /Length 2051 >>
+stream
+BT
+/F1 10 Tf
+12 TL
+1 0 0 1 50 760 Tm (So when generating the warrior, attention helps connect visual regions with concepts ) Tj
+1 0 0 1 50 746 Tm (like:) Tj
+1 0 0 1 50 732 Tm () Tj
+1 0 0 1 50 718 Tm (glass) Tj
+1 0 0 1 50 704 Tm (turquoise) Tj
+1 0 0 1 50 690 Tm (running) Tj
+1 0 0 1 50 676 Tm (warrior) Tj
+1 0 0 1 50 662 Tm (isometric view) Tj
+1 0 0 1 50 648 Tm () Tj
+1 0 0 1 50 634 Tm (In float16, this part can become unstable because Q K^T can create large or tiny values ) Tj
+1 0 0 1 50 620 Tm (before softmax.) Tj
+1 0 0 1 50 606 Tm () Tj
+1 0 0 1 50 592 Tm (3. UNet Predicts Noise) Tj
+1 0 0 1 50 578 Tm () Tj
+1 0 0 1 50 564 Tm (Diffusion starts from random noise in latent space.) Tj
+1 0 0 1 50 550 Tm () Tj
+1 0 0 1 50 536 Tm (latent_0 = random noise from seed) Tj
+1 0 0 1 50 522 Tm () Tj
+1 0 0 1 50 508 Tm (At each step, the UNet predicts what noise should be removed:) Tj
+1 0 0 1 50 494 Tm () Tj
+1 0 0 1 50 480 Tm (noise_prediction = UNet\(latent, text_embeddings, timestep\)) Tj
+1 0 0 1 50 466 Tm () Tj
+1 0 0 1 50 452 Tm (Inside that UNet are lots of:) Tj
+1 0 0 1 50 438 Tm () Tj
+1 0 0 1 50 424 Tm (y = W x + b) Tj
+1 0 0 1 50 410 Tm (attention = softmax\(Q K^T / sqrt\(d\)\) V) Tj
+1 0 0 1 50 396 Tm () Tj
+1 0 0 1 50 382 Tm (So the prompt conditioning and current noisy image state interact repeatedly.) Tj
+1 0 0 1 50 368 Tm () Tj
+1 0 0 1 50 354 Tm (4. Scheduler Updates The Latent) Tj
+1 0 0 1 50 340 Tm () Tj
+1 0 0 1 50 326 Tm (Then the scheduler applies the denoising update:) Tj
+1 0 0 1 50 312 Tm () Tj
+1 0 0 1 50 298 Tm (next_latent = scheduler_step\(latent, noise_prediction\)) Tj
+1 0 0 1 50 284 Tm () Tj
+1 0 0 1 50 270 Tm (Intuition:) Tj
+1 0 0 1 50 256 Tm () Tj
+1 0 0 1 50 242 Tm (current noisy image idea - predicted noise = cleaner image idea) Tj
+1 0 0 1 50 228 Tm () Tj
+1 0 0 1 50 214 Tm (This repeats for each inference step.) Tj
+1 0 0 1 50 200 Tm () Tj
+1 0 0 1 50 186 Tm (For 4 steps:) Tj
+1 0 0 1 50 172 Tm () Tj
+1 0 0 1 50 158 Tm (noise latent) Tj
+1 0 0 1 50 144 Tm ( -> denoise step 1) Tj
+1 0 0 1 50 130 Tm ( -> denoise step 2) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 14 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 2312 >>
+stream
+BT
+/F1 10 Tf
+12 TL
+1 0 0 1 50 760 Tm ( -> denoise step 3) Tj
+1 0 0 1 50 746 Tm ( -> denoise step 4) Tj
+1 0 0 1 50 732 Tm ( -> final latent) Tj
+1 0 0 1 50 718 Tm () Tj
+1 0 0 1 50 704 Tm (5. VAE Turns Latent Into Pixels) Tj
+1 0 0 1 50 690 Tm () Tj
+1 0 0 1 50 676 Tm (The final latent is still not an image. It is a compressed representation.) Tj
+1 0 0 1 50 662 Tm () Tj
+1 0 0 1 50 648 Tm (image = VAE_decode\(latent\)) Tj
+1 0 0 1 50 634 Tm () Tj
+1 0 0 1 50 620 Tm (The VAE decoder converts that latent tensor into RGB pixels.) Tj
+1 0 0 1 50 606 Tm () Tj
+1 0 0 1 50 592 Tm (If earlier math produced bad values, or if VAE decode becomes unstable in float16, the ) Tj
+1 0 0 1 50 578 Tm (output can become black.) Tj
+1 0 0 1 50 564 Tm () Tj
+1 0 0 1 50 550 Tm (Full Chain) Tj
+1 0 0 1 50 536 Tm () Tj
+1 0 0 1 50 522 Tm (In one simplified flow:) Tj
+1 0 0 1 50 508 Tm () Tj
+1 0 0 1 50 494 Tm (prompt) Tj
+1 0 0 1 50 480 Tm ( -> text_encoder: y = W x + b, attention\(...\)) Tj
+1 0 0 1 50 466 Tm ( -> text_embeddings) Tj
+1 0 0 1 50 452 Tm () Tj
+1 0 0 1 50 438 Tm (seed) Tj
+1 0 0 1 50 424 Tm ( -> random latent noise) Tj
+1 0 0 1 50 410 Tm () Tj
+1 0 0 1 50 396 Tm (text_embeddings + latent) Tj
+1 0 0 1 50 382 Tm ( -> UNet noise prediction using W x + b and attention) Tj
+1 0 0 1 50 368 Tm () Tj
+1 0 0 1 50 354 Tm (latent + noise_prediction) Tj
+1 0 0 1 50 340 Tm ( -> scheduler_step) Tj
+1 0 0 1 50 326 Tm ( -> repeated denoising) Tj
+1 0 0 1 50 312 Tm () Tj
+1 0 0 1 50 298 Tm (final latent) Tj
+1 0 0 1 50 284 Tm ( -> VAE_decode) Tj
+1 0 0 1 50 270 Tm ( -> RGB image) Tj
+1 0 0 1 50 256 Tm () Tj
+1 0 0 1 50 242 Tm (weight_dtype affects nearly every numeric operation in that chain. Same equations, ) Tj
+1 0 0 1 50 228 Tm (different number system. float32 gives the equations more room and precision. float16 ) Tj
+1 0 0 1 50 214 Tm (makes them cheaper but easier to break.) Tj
+1 0 0 1 50 200 Tm () Tj
+1 0 0 1 50 186 Tm (Expanded Explanation: How y = W x + b And Attention Interact) Tj
+1 0 0 1 50 172 Tm () Tj
+1 0 0 1 50 158 Tm (The equation y = W x + b is a learned transformation. It changes vectors from one ) Tj
+1 0 0 1 50 144 Tm (representation into another. For example, in the text encoder it transforms token ) Tj
+1 0 0 1 50 130 Tm (vectors. In the UNet it transforms latent feature vectors. It is how the model stores ) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 14 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 2472 >>
+stream
+BT
+/F1 10 Tf
+12 TL
+1 0 0 1 50 760 Tm (learned visual and language knowledge.) Tj
+1 0 0 1 50 746 Tm () Tj
+1 0 0 1 50 732 Tm (Attention uses those transformed vectors. Q, K, and V are usually created by learned ) Tj
+1 0 0 1 50 718 Tm (linear projections:) Tj
+1 0 0 1 50 704 Tm () Tj
+1 0 0 1 50 690 Tm (Q = Wq x + bq) Tj
+1 0 0 1 50 676 Tm (K = Wk context + bk) Tj
+1 0 0 1 50 662 Tm (V = Wv context + bv) Tj
+1 0 0 1 50 648 Tm () Tj
+1 0 0 1 50 634 Tm (So y = W x + b is not separate from attention. It is inside attention. The model first ) Tj
+1 0 0 1 50 620 Tm (uses learned matrices to create Q, K, and V. Then attention compares Q and K, and mixes ) Tj
+1 0 0 1 50 606 Tm (V.) Tj
+1 0 0 1 50 592 Tm () Tj
+1 0 0 1 50 578 Tm (For cross-attention inside the UNet:) Tj
+1 0 0 1 50 564 Tm () Tj
+1 0 0 1 50 550 Tm (- x is often the current noisy image latent features.) Tj
+1 0 0 1 50 536 Tm (- context is often the text embeddings from the prompt.) Tj
+1 0 0 1 50 522 Tm (- Q comes from the current image latent.) Tj
+1 0 0 1 50 508 Tm (- K and V come from the prompt/text embeddings.) Tj
+1 0 0 1 50 494 Tm () Tj
+1 0 0 1 50 480 Tm (That means the noisy image asks, through Q: "What prompt information is relevant to this) Tj
+1 0 0 1 50 466 Tm ( visual region right now?") Tj
+1 0 0 1 50 452 Tm () Tj
+1 0 0 1 50 438 Tm (The prompt answers, through K and V: "Here are concepts like glass, warrior, turquoise, ) Tj
+1 0 0 1 50 424 Tm (running, and isometric view.") Tj
+1 0 0 1 50 410 Tm () Tj
+1 0 0 1 50 396 Tm (Then:) Tj
+1 0 0 1 50 382 Tm () Tj
+1 0 0 1 50 368 Tm (softmax\(Q K^T / sqrt\(d\)\)) Tj
+1 0 0 1 50 354 Tm () Tj
+1 0 0 1 50 340 Tm (computes how strongly each visual position should attend to each prompt concept. ) Tj
+1 0 0 1 50 326 Tm (Multiplying by V injects the relevant prompt information back into the image features.) Tj
+1 0 0 1 50 312 Tm () Tj
+1 0 0 1 50 298 Tm (So the two equations interact like this:) Tj
+1 0 0 1 50 284 Tm () Tj
+1 0 0 1 50 270 Tm (1. Linear layers create features and Q/K/V:) Tj
+1 0 0 1 50 256 Tm (   Q = Wq latent + bq) Tj
+1 0 0 1 50 242 Tm (   K = Wk text + bk) Tj
+1 0 0 1 50 228 Tm (   V = Wv text + bv) Tj
+1 0 0 1 50 214 Tm () Tj
+1 0 0 1 50 200 Tm (2. Attention matches image features to text concepts:) Tj
+1 0 0 1 50 186 Tm (   attention = softmax\(Q K^T / sqrt\(d\)\) V) Tj
+1 0 0 1 50 172 Tm () Tj
+1 0 0 1 50 158 Tm (3. More linear layers transform the attention output:) Tj
+1 0 0 1 50 144 Tm (   y = W attention + b) Tj
+1 0 0 1 50 130 Tm () Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 14 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 8 0 R >>
+endobj
+10 0 obj
+<< /Length 2631 >>
+stream
+BT
+/F1 10 Tf
+12 TL
+1 0 0 1 50 760 Tm (4. The UNet uses the result to predict noise:) Tj
+1 0 0 1 50 746 Tm (   noise_prediction = UNet\(latent, text_embeddings, timestep\)) Tj
+1 0 0 1 50 732 Tm () Tj
+1 0 0 1 50 718 Tm (Expanded Explanation: How Scheduler And VAE Interact) Tj
+1 0 0 1 50 704 Tm () Tj
+1 0 0 1 50 690 Tm (The scheduler and VAE operate at different parts of the pipeline.) Tj
+1 0 0 1 50 676 Tm () Tj
+1 0 0 1 50 662 Tm (The scheduler works in latent space. It does not create RGB pixels. It updates the ) Tj
+1 0 0 1 50 648 Tm (compressed latent representation step by step.) Tj
+1 0 0 1 50 634 Tm () Tj
+1 0 0 1 50 620 Tm (At each denoising step:) Tj
+1 0 0 1 50 606 Tm () Tj
+1 0 0 1 50 592 Tm (noise_prediction = UNet\(latent_t, text_embeddings, timestep_t\)) Tj
+1 0 0 1 50 578 Tm (latent_t_minus_1 = scheduler_step\(latent_t, noise_prediction, timestep_t\)) Tj
+1 0 0 1 50 564 Tm () Tj
+1 0 0 1 50 550 Tm (The scheduler asks: given the current latent and the noise predicted by the UNet, what ) Tj
+1 0 0 1 50 536 Tm (should the next cleaner latent be?) Tj
+1 0 0 1 50 522 Tm () Tj
+1 0 0 1 50 508 Tm (After the final denoising step, you have:) Tj
+1 0 0 1 50 494 Tm () Tj
+1 0 0 1 50 480 Tm (final_latent) Tj
+1 0 0 1 50 466 Tm () Tj
+1 0 0 1 50 452 Tm (This final_latent is not directly viewable as an image. It is a compact tensor ) Tj
+1 0 0 1 50 438 Tm (representation. The VAE decoder then maps it into pixel space:) Tj
+1 0 0 1 50 424 Tm () Tj
+1 0 0 1 50 410 Tm (image = VAE_decode\(final_latent\)) Tj
+1 0 0 1 50 396 Tm () Tj
+1 0 0 1 50 382 Tm (So the scheduler and VAE interact sequentially:) Tj
+1 0 0 1 50 368 Tm () Tj
+1 0 0 1 50 354 Tm (1. Scheduler repeatedly refines the latent.) Tj
+1 0 0 1 50 340 Tm (2. VAE decodes only the final refined latent into RGB pixels.) Tj
+1 0 0 1 50 326 Tm () Tj
+1 0 0 1 50 312 Tm (The VAE does not usually participate in every denoising step for text-to-image. It is ) Tj
+1 0 0 1 50 298 Tm (mostly used at the end to decode the final latent. For image editing, the VAE may also ) Tj
+1 0 0 1 50 284 Tm (be used at the beginning to encode the input image into latent space.) Tj
+1 0 0 1 50 270 Tm () Tj
+1 0 0 1 50 256 Tm (Precise simplified chain:) Tj
+1 0 0 1 50 242 Tm () Tj
+1 0 0 1 50 228 Tm (input prompt -> text embeddings) Tj
+1 0 0 1 50 214 Tm (seed -> latent_T) Tj
+1 0 0 1 50 200 Tm () Tj
+1 0 0 1 50 186 Tm (for each timestep t:) Tj
+1 0 0 1 50 172 Tm (    noise_prediction_t = UNet\(latent_t, text_embeddings, t\)) Tj
+1 0 0 1 50 158 Tm (    latent_t_minus_1 = scheduler_step\(latent_t, noise_prediction_t, t\)) Tj
+1 0 0 1 50 144 Tm () Tj
+1 0 0 1 50 130 Tm (final_latent = latent_0) Tj
+ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 14 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 10 0 R >>
+endobj
+12 0 obj
+<< /Length 749 >>
+stream
+BT
+/F1 10 Tf
+12 TL
+1 0 0 1 50 760 Tm (image = VAE_decode\(final_latent\)) Tj
+1 0 0 1 50 746 Tm () Tj
+1 0 0 1 50 732 Tm (Why Precision Matters) Tj
+1 0 0 1 50 718 Tm () Tj
+1 0 0 1 50 704 Tm (The same equations run under different number systems depending on weight_dtype.) Tj
+1 0 0 1 50 690 Tm () Tj
+1 0 0 1 50 676 Tm (float16 uses less memory, but values can overflow, underflow, or lose detail. This can ) Tj
+1 0 0 1 50 662 Tm (corrupt attention scores, noise predictions, scheduler updates, or VAE decoding.) Tj
+1 0 0 1 50 648 Tm () Tj
+1 0 0 1 50 634 Tm (float32 uses more memory, but gives the equations more numeric room. That is why float32) Tj
+1 0 0 1 50 620 Tm ( is often more stable and why float16 can sometimes produce a black image.) Tj
+ET
+endstream
+endobj
+13 0 obj
+<< /Type /Page /Parent 14 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 12 0 R >>
+endobj
+14 0 obj
+<< /Type /Pages /Kids [3 0 R 5 0 R 7 0 R 9 0 R 11 0 R 13 0 R] /Count 6 >>
+endobj
+15 0 obj
+<< /Type /Catalog /Pages 14 0 R >>
+endobj
+xref
+0 16
+0000000000 65535 f 
+0000000009 00000 n 
+0000000079 00000 n 
+0000002296 00000 n 
+0000002423 00000 n 
+0000004526 00000 n 
+0000004653 00000 n 
+0000007017 00000 n 
+0000007144 00000 n 
+0000009668 00000 n 
+0000009795 00000 n 
+0000012479 00000 n 
+0000012608 00000 n 
+0000013409 00000 n 
+0000013538 00000 n 
+0000013628 00000 n 
+trailer
+<< /Size 16 /Root 15 0 R >>
+startxref
+13679
+%%EOF

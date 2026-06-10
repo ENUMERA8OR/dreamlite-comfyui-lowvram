@@ -1,0 +1,639 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+2 0 obj
+<< /Length 2600 >>
+stream
+BT
+/F1 10 Tf
+12 TL
+1 0 0 1 50 760 Tm (DreamLite Attention Breakthrough And Intuition Notes) Tj
+1 0 0 1 50 746 Tm () Tj
+1 0 0 1 50 732 Tm (Purpose) Tj
+1 0 0 1 50 718 Tm () Tj
+1 0 0 1 50 704 Tm (This document saves the key intuition and technical breakthrough from the DreamLite-base) Tj
+1 0 0 1 50 690 Tm ( 1024x1024 session. It focuses on why custom attention slicing mattered, how attention ) Tj
+1 0 0 1 50 676 Tm (interacts with prompt conditioning and denoising, and how to think about heads, seed, ) Tj
+1 0 0 1 50 662 Tm (scheduler, and VAE.) Tj
+1 0 0 1 50 648 Tm () Tj
+1 0 0 1 50 634 Tm (Part 1: The Breakthrough) Tj
+1 0 0 1 50 620 Tm () Tj
+1 0 0 1 50 606 Tm (The biggest technical advancement was not just turning on attention slicing. It was ) Tj
+1 0 0 1 50 592 Tm (understanding that DreamLite-base uses grouped-query attention in places, realizing why ) Tj
+1 0 0 1 50 578 Tm (generic Diffusers attention slicing failed, and then implementing a custom GQA-aware ) Tj
+1 0 0 1 50 564 Tm (query-token slicer.) Tj
+1 0 0 1 50 550 Tm () Tj
+1 0 0 1 50 536 Tm (Before the custom attention slicing, the situation was:) Tj
+1 0 0 1 50 522 Tm () Tj
+1 0 0 1 50 508 Tm (full CUDA:) Tj
+1 0 0 1 50 494 Tm (  DreamLite-base could not fit into 4 GB VRAM.) Tj
+1 0 0 1 50 480 Tm () Tj
+1 0 0 1 50 466 Tm (sequential CPU offload:) Tj
+1 0 0 1 50 452 Tm (  The model could load and move pieces between CPU and GPU, but attention still failed ) Tj
+1 0 0 1 50 438 Tm (when generic slicing was enabled.) Tj
+1 0 0 1 50 424 Tm () Tj
+1 0 0 1 50 410 Tm (generic Diffusers attention slicing:) Tj
+1 0 0 1 50 396 Tm (  Failed with a shape error because it assumed query heads and key/value heads had ) Tj
+1 0 0 1 50 382 Tm (matching structure.) Tj
+1 0 0 1 50 368 Tm () Tj
+1 0 0 1 50 354 Tm (The representative error was:) Tj
+1 0 0 1 50 340 Tm () Tj
+1 0 0 1 50 326 Tm (Expected size for first two dimensions of batch2 tensor to be: [2, 64] but got: [2, 16]) Tj
+1 0 0 1 50 312 Tm () Tj
+1 0 0 1 50 298 Tm (This was not a prompt problem. It was not a dtype problem. It was not the model being ) Tj
+1 0 0 1 50 284 Tm (mathematically invalid. It was a tensor-layout problem inside attention slicing.) Tj
+1 0 0 1 50 270 Tm () Tj
+1 0 0 1 50 256 Tm (The Core Attention Equation) Tj
+1 0 0 1 50 242 Tm () Tj
+1 0 0 1 50 228 Tm (Attention uses:) Tj
+1 0 0 1 50 214 Tm () Tj
+1 0 0 1 50 200 Tm (attention = softmax\(Q K^T / sqrt\(d\)\) V) Tj
+1 0 0 1 50 186 Tm () Tj
+1 0 0 1 50 172 Tm (Where:) Tj
+1 0 0 1 50 158 Tm () Tj
+1 0 0 1 50 144 Tm (Q = query, or what am I looking for?) Tj
+1 0 0 1 50 130 Tm (K = key, or what information exists?) Tj
+ET
+endstream
+endobj
+3 0 obj
+<< /Type /Page /Parent 24 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 2 0 R >>
+endobj
+4 0 obj
+<< /Length 2265 >>
+stream
+BT
+/F1 10 Tf
+12 TL
+1 0 0 1 50 760 Tm (V = value, or what content should I retrieve?) Tj
+1 0 0 1 50 746 Tm () Tj
+1 0 0 1 50 732 Tm (In a text-to-image model, Q can come from the current noisy image latent, while K and V ) Tj
+1 0 0 1 50 718 Tm (can come from prompt/text embeddings. This is how image regions ask which prompt ) Tj
+1 0 0 1 50 704 Tm (concepts matter for them.) Tj
+1 0 0 1 50 690 Tm () Tj
+1 0 0 1 50 676 Tm (Why Attention Gets Expensive) Tj
+1 0 0 1 50 662 Tm () Tj
+1 0 0 1 50 648 Tm (The expensive part is the attention score table:) Tj
+1 0 0 1 50 634 Tm () Tj
+1 0 0 1 50 620 Tm (Q K^T) Tj
+1 0 0 1 50 606 Tm () Tj
+1 0 0 1 50 592 Tm (Its rough size depends on:) Tj
+1 0 0 1 50 578 Tm () Tj
+1 0 0 1 50 564 Tm (query_tokens x key_tokens) Tj
+1 0 0 1 50 550 Tm () Tj
+1 0 0 1 50 536 Tm (For image generation, query_tokens can be large because many latent image positions are ) Tj
+1 0 0 1 50 522 Tm (asking questions at once. At 1024x1024, the latent has far more spatial work than at ) Tj
+1 0 0 1 50 508 Tm (512x512. Attention can become a major peak-memory cost.) Tj
+1 0 0 1 50 494 Tm () Tj
+1 0 0 1 50 480 Tm (What Attention Slicing Tries To Do) Tj
+1 0 0 1 50 466 Tm () Tj
+1 0 0 1 50 452 Tm (Attention slicing reduces peak memory by not computing the whole attention table at ) Tj
+1 0 0 1 50 438 Tm (once.) Tj
+1 0 0 1 50 424 Tm () Tj
+1 0 0 1 50 410 Tm (Instead of:) Tj
+1 0 0 1 50 396 Tm () Tj
+1 0 0 1 50 382 Tm (all query tokens x all key tokens) Tj
+1 0 0 1 50 368 Tm () Tj
+1 0 0 1 50 354 Tm (it computes chunks:) Tj
+1 0 0 1 50 340 Tm () Tj
+1 0 0 1 50 326 Tm (query tokens 1-256 x all key tokens) Tj
+1 0 0 1 50 312 Tm (query tokens 257-512 x all key tokens) Tj
+1 0 0 1 50 298 Tm (query tokens 513-768 x all key tokens) Tj
+1 0 0 1 50 284 Tm (...) Tj
+1 0 0 1 50 270 Tm () Tj
+1 0 0 1 50 256 Tm (Then it concatenates the results.) Tj
+1 0 0 1 50 242 Tm () Tj
+1 0 0 1 50 228 Tm (This should produce the same result, or nearly the same result, while requiring less ) Tj
+1 0 0 1 50 214 Tm (peak VRAM.) Tj
+1 0 0 1 50 200 Tm () Tj
+1 0 0 1 50 186 Tm (Why Generic Slicing Failed) Tj
+1 0 0 1 50 172 Tm () Tj
+1 0 0 1 50 158 Tm (Generic Diffusers slicing effectively assumes a normal multi-head attention layout ) Tj
+1 0 0 1 50 144 Tm (where:) Tj
+1 0 0 1 50 130 Tm () Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 24 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 2004 >>
+stream
+BT
+/F1 10 Tf
+12 TL
+1 0 0 1 50 760 Tm (query heads = key heads = value heads) Tj
+1 0 0 1 50 746 Tm () Tj
+1 0 0 1 50 732 Tm (Example:) Tj
+1 0 0 1 50 718 Tm () Tj
+1 0 0 1 50 704 Tm (Q has 8 heads) Tj
+1 0 0 1 50 690 Tm (K has 8 heads) Tj
+1 0 0 1 50 676 Tm (V has 8 heads) Tj
+1 0 0 1 50 662 Tm () Tj
+1 0 0 1 50 648 Tm (DreamLite-base uses grouped-query attention in places:) Tj
+1 0 0 1 50 634 Tm () Tj
+1 0 0 1 50 620 Tm (Q has more heads) Tj
+1 0 0 1 50 606 Tm (K/V have fewer heads) Tj
+1 0 0 1 50 592 Tm () Tj
+1 0 0 1 50 578 Tm (Example:) Tj
+1 0 0 1 50 564 Tm () Tj
+1 0 0 1 50 550 Tm (Q has 8 heads) Tj
+1 0 0 1 50 536 Tm (K has 2 heads) Tj
+1 0 0 1 50 522 Tm (V has 2 heads) Tj
+1 0 0 1 50 508 Tm () Tj
+1 0 0 1 50 494 Tm (This is grouped-query attention, also called GQA. It is a legitimate efficiency design. ) Tj
+1 0 0 1 50 480 Tm (Several query heads share fewer key/value heads.) Tj
+1 0 0 1 50 466 Tm () Tj
+1 0 0 1 50 452 Tm (A useful analogy:) Tj
+1 0 0 1 50 438 Tm () Tj
+1 0 0 1 50 424 Tm (8 people asking questions) Tj
+1 0 0 1 50 410 Tm (2 reference books shared among them) Tj
+1 0 0 1 50 396 Tm () Tj
+1 0 0 1 50 382 Tm (Generic slicing treated the 2 shared reference books as if there were 8 matching ) Tj
+1 0 0 1 50 368 Tm (reference books. That broke the shape layout.) Tj
+1 0 0 1 50 354 Tm () Tj
+1 0 0 1 50 340 Tm (The Correct Shape Mental Model) Tj
+1 0 0 1 50 326 Tm () Tj
+1 0 0 1 50 312 Tm (The correct GQA-aware layout is:) Tj
+1 0 0 1 50 298 Tm () Tj
+1 0 0 1 50 284 Tm (Q: [batch, query_heads, query_tokens, head_dim]) Tj
+1 0 0 1 50 270 Tm (K: [batch, kv_heads,    key_tokens,   head_dim]) Tj
+1 0 0 1 50 256 Tm (V: [batch, kv_heads,    key_tokens,   head_dim]) Tj
+1 0 0 1 50 242 Tm () Tj
+1 0 0 1 50 228 Tm (The key point is:) Tj
+1 0 0 1 50 214 Tm () Tj
+1 0 0 1 50 200 Tm (query_heads may not equal kv_heads) Tj
+1 0 0 1 50 186 Tm () Tj
+1 0 0 1 50 172 Tm (So a correct slicer must preserve that distinction.) Tj
+1 0 0 1 50 158 Tm () Tj
+1 0 0 1 50 144 Tm (The Custom Fix) Tj
+1 0 0 1 50 130 Tm () Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 24 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 2171 >>
+stream
+BT
+/F1 10 Tf
+12 TL
+1 0 0 1 50 760 Tm (The custom mode was named:) Tj
+1 0 0 1 50 746 Tm () Tj
+1 0 0 1 50 732 Tm (gqa_query_slicing) Tj
+1 0 0 1 50 718 Tm () Tj
+1 0 0 1 50 704 Tm (It slices only the query-token dimension while preserving the GQA head structure.) Tj
+1 0 0 1 50 690 Tm () Tj
+1 0 0 1 50 676 Tm (Conceptually:) Tj
+1 0 0 1 50 662 Tm () Tj
+1 0 0 1 50 648 Tm (for each chunk of query tokens:) Tj
+1 0 0 1 50 634 Tm (    run scaled_dot_product_attention\(query_chunk, key, value\)) Tj
+1 0 0 1 50 620 Tm (    preserve query_heads and kv_heads) Tj
+1 0 0 1 50 606 Tm (    use enable_gqa=True when query_heads != kv_heads) Tj
+1 0 0 1 50 592 Tm (concatenate chunks) Tj
+1 0 0 1 50 578 Tm () Tj
+1 0 0 1 50 564 Tm (This avoided the broken generic reshape.) Tj
+1 0 0 1 50 550 Tm () Tj
+1 0 0 1 50 536 Tm (The custom slicer kept:) Tj
+1 0 0 1 50 522 Tm () Tj
+1 0 0 1 50 508 Tm (Q: [batch, query_heads, query_chunk_tokens, head_dim]) Tj
+1 0 0 1 50 494 Tm (K: [batch, kv_heads,    key_tokens,         head_dim]) Tj
+1 0 0 1 50 480 Tm (V: [batch, kv_heads,    key_tokens,         head_dim]) Tj
+1 0 0 1 50 466 Tm () Tj
+1 0 0 1 50 452 Tm (This is why it worked.) Tj
+1 0 0 1 50 438 Tm () Tj
+1 0 0 1 50 424 Tm (Why This Unlocked Float32) Tj
+1 0 0 1 50 410 Tm () Tj
+1 0 0 1 50 396 Tm (Two separate memory problems were attacked:) Tj
+1 0 0 1 50 382 Tm () Tj
+1 0 0 1 50 368 Tm (1. Model residency memory) Tj
+1 0 0 1 50 354 Tm () Tj
+1 0 0 1 50 340 Tm (sequential_cpu_offload keeps only the needed module/layer on the GPU, then moves it back) Tj
+1 0 0 1 50 326 Tm ( to CPU RAM.) Tj
+1 0 0 1 50 312 Tm () Tj
+1 0 0 1 50 298 Tm (2. Attention activation memory) Tj
+1 0 0 1 50 284 Tm () Tj
+1 0 0 1 50 270 Tm (gqa_query_slicing reduces peak memory inside attention by processing query tokens in ) Tj
+1 0 0 1 50 256 Tm (chunks.) Tj
+1 0 0 1 50 242 Tm () Tj
+1 0 0 1 50 228 Tm (Together, these made the following viable on a 4 GB GPU:) Tj
+1 0 0 1 50 214 Tm () Tj
+1 0 0 1 50 200 Tm (DreamLite-base) Tj
+1 0 0 1 50 186 Tm (1024x1024) Tj
+1 0 0 1 50 172 Tm (float32) Tj
+1 0 0 1 50 158 Tm (sequential_cpu_offload) Tj
+1 0 0 1 50 144 Tm (gqa_query_slicing) Tj
+1 0 0 1 50 130 Tm (attention_slice_size=256) Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 24 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 8 0 R >>
+endobj
+10 0 obj
+<< /Length 2545 >>
+stream
+BT
+/F1 10 Tf
+12 TL
+1 0 0 1 50 760 Tm () Tj
+1 0 0 1 50 746 Tm (This was the major breakthrough.) Tj
+1 0 0 1 50 732 Tm () Tj
+1 0 0 1 50 718 Tm (Part 2: Intuition About Attention, Seed, Heads, And Denoising) Tj
+1 0 0 1 50 704 Tm () Tj
+1 0 0 1 50 690 Tm (User Intuition, Refined) Tj
+1 0 0 1 50 676 Tm () Tj
+1 0 0 1 50 662 Tm (The intuitive understanding was:) Tj
+1 0 0 1 50 648 Tm () Tj
+1 0 0 1 50 634 Tm (Attention maps the prompt, seed, and other context, calculates how much importance each ) Tj
+1 0 0 1 50 620 Tm (pixel area should have, then the model reduces noise from those areas. During denoising,) Tj
+1 0 0 1 50 606 Tm ( it continuously recalculates what should belong in each pixel area. Heads act somewhat ) Tj
+1 0 0 1 50 592 Tm (like specialized viewpoints, helping calculate color, orientation, pose, material, and ) Tj
+1 0 0 1 50 578 Tm (other aspects, then the model combines those calculations for denoising.) Tj
+1 0 0 1 50 564 Tm () Tj
+1 0 0 1 50 550 Tm (This intuition is mostly right, with a few important refinements.) Tj
+1 0 0 1 50 536 Tm () Tj
+1 0 0 1 50 522 Tm (Correction 1: Attention Does Not Directly Map The Seed) Tj
+1 0 0 1 50 508 Tm () Tj
+1 0 0 1 50 494 Tm (The seed creates the initial random latent noise:) Tj
+1 0 0 1 50 480 Tm () Tj
+1 0 0 1 50 466 Tm (seed -> initial latent noise) Tj
+1 0 0 1 50 452 Tm () Tj
+1 0 0 1 50 438 Tm (Attention does not read the seed as a semantic object. Instead, attention reads the ) Tj
+1 0 0 1 50 424 Tm (current latent state. That latent state originally came from the seed.) Tj
+1 0 0 1 50 410 Tm () Tj
+1 0 0 1 50 396 Tm (So the seed matters because it determines the starting noise pattern and therefore the ) Tj
+1 0 0 1 50 382 Tm (initial composition possibilities.) Tj
+1 0 0 1 50 368 Tm () Tj
+1 0 0 1 50 354 Tm (A more precise chain:) Tj
+1 0 0 1 50 340 Tm () Tj
+1 0 0 1 50 326 Tm (seed -> initial latent noise) Tj
+1 0 0 1 50 312 Tm (prompt -> text embeddings) Tj
+1 0 0 1 50 298 Tm (current latent + text embeddings + timestep -> UNet) Tj
+1 0 0 1 50 284 Tm (UNet uses attention internally) Tj
+1 0 0 1 50 270 Tm (UNet predicts noise) Tj
+1 0 0 1 50 256 Tm (scheduler updates latent) Tj
+1 0 0 1 50 242 Tm () Tj
+1 0 0 1 50 228 Tm (Correction 2: Attention Does Not Directly Remove Noise) Tj
+1 0 0 1 50 214 Tm () Tj
+1 0 0 1 50 200 Tm (Attention helps the UNet compute a better noise prediction.) Tj
+1 0 0 1 50 186 Tm () Tj
+1 0 0 1 50 172 Tm (The scheduler performs the actual latent update.) Tj
+1 0 0 1 50 158 Tm () Tj
+1 0 0 1 50 144 Tm (The distinction is:) Tj
+1 0 0 1 50 130 Tm () Tj
+ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 24 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 10 0 R >>
+endobj
+12 0 obj
+<< /Length 2229 >>
+stream
+BT
+/F1 10 Tf
+12 TL
+1 0 0 1 50 760 Tm (attention informs noise prediction) Tj
+1 0 0 1 50 746 Tm (UNet outputs noise_prediction) Tj
+1 0 0 1 50 732 Tm (scheduler updates the latent) Tj
+1 0 0 1 50 718 Tm () Tj
+1 0 0 1 50 704 Tm (Mathematically:) Tj
+1 0 0 1 50 690 Tm () Tj
+1 0 0 1 50 676 Tm (noise_prediction = UNet\(latent_t, text_embeddings, timestep_t\)) Tj
+1 0 0 1 50 662 Tm (latent_t_minus_1 = scheduler_step\(latent_t, noise_prediction, timestep_t\)) Tj
+1 0 0 1 50 648 Tm () Tj
+1 0 0 1 50 634 Tm (So attention is part of the thinking process. The scheduler is the update rule.) Tj
+1 0 0 1 50 620 Tm () Tj
+1 0 0 1 50 606 Tm (The Repeated Denoising Loop) Tj
+1 0 0 1 50 592 Tm () Tj
+1 0 0 1 50 578 Tm (At each denoising step:) Tj
+1 0 0 1 50 564 Tm () Tj
+1 0 0 1 50 550 Tm (1. The current latent contains a noisy image idea.) Tj
+1 0 0 1 50 536 Tm (2. The prompt embeddings contain semantic direction.) Tj
+1 0 0 1 50 522 Tm (3. The timestep tells the model how noisy the latent still is.) Tj
+1 0 0 1 50 508 Tm (4. The UNet processes these inputs.) Tj
+1 0 0 1 50 494 Tm (5. Attention recalculates which image regions and prompt concepts matter.) Tj
+1 0 0 1 50 480 Tm (6. The UNet predicts the noise to remove.) Tj
+1 0 0 1 50 466 Tm (7. The scheduler updates the latent.) Tj
+1 0 0 1 50 452 Tm (8. The next step repeats with a changed latent.) Tj
+1 0 0 1 50 438 Tm () Tj
+1 0 0 1 50 424 Tm (This means attention is continuously recalculated. It is not computed once and reused ) Tj
+1 0 0 1 50 410 Tm (unchanged.) Tj
+1 0 0 1 50 396 Tm () Tj
+1 0 0 1 50 382 Tm (Early steps may establish:) Tj
+1 0 0 1 50 368 Tm () Tj
+1 0 0 1 50 354 Tm (rough silhouette) Tj
+1 0 0 1 50 340 Tm (composition) Tj
+1 0 0 1 50 326 Tm (pose) Tj
+1 0 0 1 50 312 Tm (large material zones) Tj
+1 0 0 1 50 298 Tm () Tj
+1 0 0 1 50 284 Tm (Later steps may refine:) Tj
+1 0 0 1 50 270 Tm () Tj
+1 0 0 1 50 256 Tm (limbs) Tj
+1 0 0 1 50 242 Tm (face/profile) Tj
+1 0 0 1 50 228 Tm (glass highlights) Tj
+1 0 0 1 50 214 Tm (ornaments) Tj
+1 0 0 1 50 200 Tm (belt/headpiece) Tj
+1 0 0 1 50 186 Tm (platform edges) Tj
+1 0 0 1 50 172 Tm (surface reflections) Tj
+1 0 0 1 50 158 Tm () Tj
+1 0 0 1 50 144 Tm (How Prompt Conditioning And Latent State Interact) Tj
+1 0 0 1 50 130 Tm () Tj
+ET
+endstream
+endobj
+13 0 obj
+<< /Type /Page /Parent 24 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 12 0 R >>
+endobj
+14 0 obj
+<< /Length 2032 >>
+stream
+BT
+/F1 10 Tf
+12 TL
+1 0 0 1 50 760 Tm (Cross-attention is the key interaction between the current image state and the prompt.) Tj
+1 0 0 1 50 746 Tm () Tj
+1 0 0 1 50 732 Tm (In cross-attention:) Tj
+1 0 0 1 50 718 Tm () Tj
+1 0 0 1 50 704 Tm (Q comes from current image/latent features) Tj
+1 0 0 1 50 690 Tm (K comes from prompt/text embeddings) Tj
+1 0 0 1 50 676 Tm (V comes from prompt/text embeddings) Tj
+1 0 0 1 50 662 Tm () Tj
+1 0 0 1 50 648 Tm (So the image latent asks:) Tj
+1 0 0 1 50 634 Tm () Tj
+1 0 0 1 50 620 Tm (What prompt information is relevant to this visual region right now?) Tj
+1 0 0 1 50 606 Tm () Tj
+1 0 0 1 50 592 Tm (The prompt provides concepts such as:) Tj
+1 0 0 1 50 578 Tm () Tj
+1 0 0 1 50 564 Tm (glass) Tj
+1 0 0 1 50 550 Tm (turquoise) Tj
+1 0 0 1 50 536 Tm (running) Tj
+1 0 0 1 50 522 Tm (warrior) Tj
+1 0 0 1 50 508 Tm (statue) Tj
+1 0 0 1 50 494 Tm (isometric view) Tj
+1 0 0 1 50 480 Tm () Tj
+1 0 0 1 50 466 Tm (The attention scores decide how strongly each image region should connect to each prompt) Tj
+1 0 0 1 50 452 Tm ( concept.) Tj
+1 0 0 1 50 438 Tm () Tj
+1 0 0 1 50 424 Tm (The equation:) Tj
+1 0 0 1 50 410 Tm () Tj
+1 0 0 1 50 396 Tm (softmax\(Q K^T / sqrt\(d\)\)) Tj
+1 0 0 1 50 382 Tm () Tj
+1 0 0 1 50 368 Tm (produces importance weights.) Tj
+1 0 0 1 50 354 Tm () Tj
+1 0 0 1 50 340 Tm (Then multiplying by V injects the relevant prompt content back into image features:) Tj
+1 0 0 1 50 326 Tm () Tj
+1 0 0 1 50 312 Tm (attention_output = softmax\(Q K^T / sqrt\(d\)\) V) Tj
+1 0 0 1 50 298 Tm () Tj
+1 0 0 1 50 284 Tm (The UNet uses that output to help predict the noise.) Tj
+1 0 0 1 50 270 Tm () Tj
+1 0 0 1 50 256 Tm (How y = W x + b Interacts With Attention) Tj
+1 0 0 1 50 242 Tm () Tj
+1 0 0 1 50 228 Tm (The equation:) Tj
+1 0 0 1 50 214 Tm () Tj
+1 0 0 1 50 200 Tm (y = W x + b) Tj
+1 0 0 1 50 186 Tm () Tj
+1 0 0 1 50 172 Tm (is the basic learned transformation inside neural networks.) Tj
+1 0 0 1 50 158 Tm () Tj
+1 0 0 1 50 144 Tm (It is also how Q, K, and V are created:) Tj
+1 0 0 1 50 130 Tm () Tj
+ET
+endstream
+endobj
+15 0 obj
+<< /Type /Page /Parent 24 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 14 0 R >>
+endobj
+16 0 obj
+<< /Length 2081 >>
+stream
+BT
+/F1 10 Tf
+12 TL
+1 0 0 1 50 760 Tm (Q = Wq x + bq) Tj
+1 0 0 1 50 746 Tm (K = Wk context + bk) Tj
+1 0 0 1 50 732 Tm (V = Wv context + bv) Tj
+1 0 0 1 50 718 Tm () Tj
+1 0 0 1 50 704 Tm (So y = W x + b is not separate from attention. It is inside attention.) Tj
+1 0 0 1 50 690 Tm () Tj
+1 0 0 1 50 676 Tm (A cross-attention block roughly does:) Tj
+1 0 0 1 50 662 Tm () Tj
+1 0 0 1 50 648 Tm (1. Transform latent features into queries:) Tj
+1 0 0 1 50 634 Tm () Tj
+1 0 0 1 50 620 Tm (Q = Wq latent + bq) Tj
+1 0 0 1 50 606 Tm () Tj
+1 0 0 1 50 592 Tm (2. Transform prompt/text embeddings into keys and values:) Tj
+1 0 0 1 50 578 Tm () Tj
+1 0 0 1 50 564 Tm (K = Wk text + bk) Tj
+1 0 0 1 50 550 Tm (V = Wv text + bv) Tj
+1 0 0 1 50 536 Tm () Tj
+1 0 0 1 50 522 Tm (3. Compare Q and K:) Tj
+1 0 0 1 50 508 Tm () Tj
+1 0 0 1 50 494 Tm (scores = Q K^T / sqrt\(d\)) Tj
+1 0 0 1 50 480 Tm () Tj
+1 0 0 1 50 466 Tm (4. Convert scores into weights:) Tj
+1 0 0 1 50 452 Tm () Tj
+1 0 0 1 50 438 Tm (weights = softmax\(scores\)) Tj
+1 0 0 1 50 424 Tm () Tj
+1 0 0 1 50 410 Tm (5. Retrieve prompt information:) Tj
+1 0 0 1 50 396 Tm () Tj
+1 0 0 1 50 382 Tm (attention_output = weights V) Tj
+1 0 0 1 50 368 Tm () Tj
+1 0 0 1 50 354 Tm (6. Transform the output again:) Tj
+1 0 0 1 50 340 Tm () Tj
+1 0 0 1 50 326 Tm (output = Wout attention_output + bout) Tj
+1 0 0 1 50 312 Tm () Tj
+1 0 0 1 50 298 Tm (This output becomes part of the next feature state inside the UNet.) Tj
+1 0 0 1 50 284 Tm () Tj
+1 0 0 1 50 270 Tm (Heads: A Better Intuition) Tj
+1 0 0 1 50 256 Tm () Tj
+1 0 0 1 50 242 Tm (Attention heads are somewhat like specialized viewpoints, but they are not exactly ) Tj
+1 0 0 1 50 228 Tm (mixture-of-experts.) Tj
+1 0 0 1 50 214 Tm () Tj
+1 0 0 1 50 200 Tm (A good intuition is:) Tj
+1 0 0 1 50 186 Tm () Tj
+1 0 0 1 50 172 Tm (Each attention head is a different lens.) Tj
+1 0 0 1 50 158 Tm () Tj
+1 0 0 1 50 144 Tm (One head may focus more on pose. Another may focus more on material. Another may track ) Tj
+1 0 0 1 50 130 Tm (edges. Another may help prompt alignment. Another may help spatial consistency.) Tj
+ET
+endstream
+endobj
+17 0 obj
+<< /Type /Page /Parent 24 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 16 0 R >>
+endobj
+18 0 obj
+<< /Length 2262 >>
+stream
+BT
+/F1 10 Tf
+12 TL
+1 0 0 1 50 760 Tm () Tj
+1 0 0 1 50 746 Tm (But these roles are learned and distributed. They are not explicitly labeled by humans.) Tj
+1 0 0 1 50 732 Tm () Tj
+1 0 0 1 50 718 Tm (Important distinction:) Tj
+1 0 0 1 50 704 Tm () Tj
+1 0 0 1 50 690 Tm (Mixture of experts:) Tj
+1 0 0 1 50 676 Tm (  routes tokens/work to different expert networks.) Tj
+1 0 0 1 50 662 Tm () Tj
+1 0 0 1 50 648 Tm (Attention heads:) Tj
+1 0 0 1 50 634 Tm (  compute parallel relationship views over the same information.) Tj
+1 0 0 1 50 620 Tm () Tj
+1 0 0 1 50 606 Tm (Each head produces its own output:) Tj
+1 0 0 1 50 592 Tm () Tj
+1 0 0 1 50 578 Tm (head_1_output) Tj
+1 0 0 1 50 564 Tm (head_2_output) Tj
+1 0 0 1 50 550 Tm (head_3_output) Tj
+1 0 0 1 50 536 Tm (...) Tj
+1 0 0 1 50 522 Tm () Tj
+1 0 0 1 50 508 Tm (Then the outputs are concatenated and projected:) Tj
+1 0 0 1 50 494 Tm () Tj
+1 0 0 1 50 480 Tm (combined = concat\(head_outputs\)) Tj
+1 0 0 1 50 466 Tm (output = Wout combined + bout) Tj
+1 0 0 1 50 452 Tm () Tj
+1 0 0 1 50 438 Tm (This combined result feeds the next UNet layer.) Tj
+1 0 0 1 50 424 Tm () Tj
+1 0 0 1 50 410 Tm (So heads do not simply build one single big matrix table. Each head has its own ) Tj
+1 0 0 1 50 396 Tm (attention map and output. The model combines the head outputs afterward.) Tj
+1 0 0 1 50 382 Tm () Tj
+1 0 0 1 50 368 Tm (Image Regions, Not Literal Pixels) Tj
+1 0 0 1 50 354 Tm () Tj
+1 0 0 1 50 340 Tm (It is useful to say attention decides what each pixel area should become, but ) Tj
+1 0 0 1 50 326 Tm (technically the model operates mostly in latent space, not raw pixel space.) Tj
+1 0 0 1 50 312 Tm () Tj
+1 0 0 1 50 298 Tm (So a more precise phrase is:) Tj
+1 0 0 1 50 284 Tm () Tj
+1 0 0 1 50 270 Tm (latent image regions) Tj
+1 0 0 1 50 256 Tm () Tj
+1 0 0 1 50 242 Tm (The VAE later decodes the final latent into actual RGB pixels.) Tj
+1 0 0 1 50 228 Tm () Tj
+1 0 0 1 50 214 Tm (Full Intuitive Chain) Tj
+1 0 0 1 50 200 Tm () Tj
+1 0 0 1 50 186 Tm (The best mental model is:) Tj
+1 0 0 1 50 172 Tm () Tj
+1 0 0 1 50 158 Tm (The seed gives starting noise.) Tj
+1 0 0 1 50 144 Tm (The prompt gives semantic direction.) Tj
+1 0 0 1 50 130 Tm (At each denoising step, attention recalculates which image regions and prompt concepts ) Tj
+ET
+endstream
+endobj
+19 0 obj
+<< /Type /Page /Parent 24 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 18 0 R >>
+endobj
+20 0 obj
+<< /Length 2471 >>
+stream
+BT
+/F1 10 Tf
+12 TL
+1 0 0 1 50 760 Tm (matter.) Tj
+1 0 0 1 50 746 Tm (Multiple heads compute different relationship views in parallel.) Tj
+1 0 0 1 50 732 Tm (Those views are combined into updated features.) Tj
+1 0 0 1 50 718 Tm (The UNet uses those features to predict noise.) Tj
+1 0 0 1 50 704 Tm (The scheduler updates the latent.) Tj
+1 0 0 1 50 690 Tm (This repeats until the latent is clean enough.) Tj
+1 0 0 1 50 676 Tm (The VAE decodes the final latent into pixels.) Tj
+1 0 0 1 50 662 Tm () Tj
+1 0 0 1 50 648 Tm (In compact form:) Tj
+1 0 0 1 50 634 Tm () Tj
+1 0 0 1 50 620 Tm (seed -> initial latent noise) Tj
+1 0 0 1 50 606 Tm (prompt -> text embeddings) Tj
+1 0 0 1 50 592 Tm () Tj
+1 0 0 1 50 578 Tm (for each timestep:) Tj
+1 0 0 1 50 564 Tm (    attention relates latent regions to prompt concepts and other latent regions) Tj
+1 0 0 1 50 550 Tm (    UNet predicts noise) Tj
+1 0 0 1 50 536 Tm (    scheduler updates latent) Tj
+1 0 0 1 50 522 Tm () Tj
+1 0 0 1 50 508 Tm (final latent -> VAE decode -> RGB image) Tj
+1 0 0 1 50 494 Tm () Tj
+1 0 0 1 50 480 Tm (Why The Breakthrough Matters Conceptually) Tj
+1 0 0 1 50 466 Tm () Tj
+1 0 0 1 50 452 Tm (The custom GQA attention slicer did not change what the model was trying to draw. It ) Tj
+1 0 0 1 50 438 Tm (changed how the attention calculation was executed so it fit the hardware.) Tj
+1 0 0 1 50 424 Tm () Tj
+1 0 0 1 50 410 Tm (It preserved the math structure:) Tj
+1 0 0 1 50 396 Tm () Tj
+1 0 0 1 50 382 Tm (query heads remain query heads) Tj
+1 0 0 1 50 368 Tm (key/value heads remain key/value heads) Tj
+1 0 0 1 50 354 Tm (GQA sharing remains valid) Tj
+1 0 0 1 50 340 Tm (query tokens are processed in chunks) Tj
+1 0 0 1 50 326 Tm () Tj
+1 0 0 1 50 312 Tm (That made the computation memory-feasible without breaking the model's attention logic.) Tj
+1 0 0 1 50 298 Tm () Tj
+1 0 0 1 50 284 Tm (Final Summary) Tj
+1 0 0 1 50 270 Tm () Tj
+1 0 0 1 50 256 Tm (The breakthrough was:) Tj
+1 0 0 1 50 242 Tm () Tj
+1 0 0 1 50 228 Tm (1. Full DreamLite-base did not fit on 4 GB VRAM.) Tj
+1 0 0 1 50 214 Tm (2. Sequential CPU offload solved model residency.) Tj
+1 0 0 1 50 200 Tm (3. Generic attention slicing failed because DreamLite-base uses GQA.) Tj
+1 0 0 1 50 186 Tm (4. Custom query-token slicing respected GQA structure.) Tj
+1 0 0 1 50 172 Tm (5. This unlocked 1024x1024 DreamLite-base float32 generation on the 4 GB GPU.) Tj
+1 0 0 1 50 158 Tm () Tj
+1 0 0 1 50 144 Tm (The intuitive model is:) Tj
+1 0 0 1 50 130 Tm () Tj
+ET
+endstream
+endobj
+21 0 obj
+<< /Type /Page /Parent 24 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 20 0 R >>
+endobj
+22 0 obj
+<< /Length 413 >>
+stream
+BT
+/F1 10 Tf
+12 TL
+1 0 0 1 50 760 Tm (Attention repeatedly helps the UNet decide what each latent region should become, given ) Tj
+1 0 0 1 50 746 Tm (the current noisy image state and prompt concepts. Heads provide multiple parallel ) Tj
+1 0 0 1 50 732 Tm (relationship views. The UNet predicts noise. The scheduler updates the latent. The VAE ) Tj
+1 0 0 1 50 718 Tm (finally turns that latent into pixels.) Tj
+ET
+endstream
+endobj
+23 0 obj
+<< /Type /Page /Parent 24 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 22 0 R >>
+endobj
+24 0 obj
+<< /Type /Pages /Kids [3 0 R 5 0 R 7 0 R 9 0 R 11 0 R 13 0 R 15 0 R 17 0 R 19 0 R 21 0 R 23 0 R] /Count 11 >>
+endobj
+25 0 obj
+<< /Type /Catalog /Pages 24 0 R >>
+endobj
+xref
+0 26
+0000000000 65535 f 
+0000000009 00000 n 
+0000000079 00000 n 
+0000002731 00000 n 
+0000002858 00000 n 
+0000005175 00000 n 
+0000005302 00000 n 
+0000007358 00000 n 
+0000007485 00000 n 
+0000009708 00000 n 
+0000009835 00000 n 
+0000012433 00000 n 
+0000012562 00000 n 
+0000014844 00000 n 
+0000014973 00000 n 
+0000017058 00000 n 
+0000017187 00000 n 
+0000019321 00000 n 
+0000019450 00000 n 
+0000021765 00000 n 
+0000021894 00000 n 
+0000024418 00000 n 
+0000024547 00000 n 
+0000025012 00000 n 
+0000025141 00000 n 
+0000025267 00000 n 
+trailer
+<< /Size 26 /Root 25 0 R >>
+startxref
+25318
+%%EOF
