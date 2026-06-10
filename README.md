@@ -22,7 +22,7 @@ Generated and upscaled examples from the workflow:
 |---|---|
 | ![DreamLite-mobile running glass warrior raw output](Generated_Images/running_warrior1024.png) | ![Upscaled glass warrior statue](Generated_Images/uploaded_image_esrgan_upscale_00001_.png) |
 
-| DreamLite-base | Alternate upscale result |
+| DreamLite-base | ESRGAN upscale |
 |---|---|
 | ![DreamLite-base glass warrior result](Generated_Images/base_warrior_glass_1024_gqa_f32_s26_seed2147483647.png) | ![Stylized upscaled glass warrior](Generated_Images/uploaded_image_esrgan_upscale_00002_.png) |
 
