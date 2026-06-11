@@ -18,7 +18,7 @@ Generic Diffusers attention slicing can break DreamLite-base grouped-query atten
 
 Generated and upscaled examples from the workflow:
 
-| DreamLite mobile | ESRGAN upscale |
+| DreamLite-mobile | ESRGAN upscale |
 |---|---|
 | ![DreamLite-mobile running glass warrior raw output](Generated_Images/running_warrior1024.png) | ![Upscaled glass warrior statue](Generated_Images/uploaded_image_esrgan_upscale_00001_.png) |
 
